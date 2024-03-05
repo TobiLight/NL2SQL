@@ -5,3 +5,10 @@ This repository implements an NL2SQL system that translates natural language que
 - Translate natural language questions to valid SQL statements.
 - Currently supports English language input.
 - Handles complex queries, supports aggregation functions
+
+
+### Technologies
+- **[Google Gemini](https://ai.google.dev/docs/gemini_api_overview)** - Generative AI model
+- **[FastAPI](https://fastapi.tiangolo.com)** - Web server
+- **[Prisma ORM](https://prisma-client-py.readthedocs.io/en/stable/)** - For querying data easily
+- **[PostgreSQL]()** - Data Storage
