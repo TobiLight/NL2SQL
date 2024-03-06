@@ -6,6 +6,7 @@
 
 from fastapi import FastAPI
 import uvicorn
+from db import db
 from fastapi.middleware.cors import CORSMiddleware
 from prisma import errors
 
@@ -29,19 +30,19 @@ def init_app():
                        allow_headers=["Content-Type", "Authorization",
                                       "WWW-AUTHENTICATE"])
 
-    # @app.on_event("startup")
-    # async def startup():
-    #     try:
-    #         await db.connect()
-    #         print("✅ Database Connected!")
-    #     except errors.PrismaError as e:
-    #         print("error: ", e)
-    #         print("❌ DB Connection failed")
-    #         raise Exception("Database connection failed!")
+    @app.on_event("startup")
+    async def startup():
+        try:
+            await db.connect()
+            print("✅ Database Connected!")
+        except errors.PrismaError as e:
+            print("error: ", e)
+            print("❌ DB Connection failed")
+            raise Exception("Database connection failed!")
 
-    # @app.on_event("shutdown")
-    # async def shutdown():
-    #     await db.disconnect()
+    @app.on_event("shutdown")
+    async def shutdown():
+        await db.disconnect()
 
     # from src import api
     # app.include_router(api)
@@ -51,4 +52,4 @@ def init_app():
 app = init_app()
 
 if __name__ == "__main__":
-    uvicorn.run('src.main:app', host="0.0.0.0", port=8000, reload=True)
+    uvicorn.run('main:app', host="0.0.0.0", port=8000, reload=True)
