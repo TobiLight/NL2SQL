@@ -1,6 +1,6 @@
 datasource db {
     provider = "postgresql"
-    url      =  env("DEFAULT_DATABASE")
+    url      = env("DEFAULT_DATABASE")
 }
 
 // generator
@@ -11,38 +11,39 @@ generator py {
 }
 
 model User {
-    id                   String               @id @unique
-    name                 String?
-    email                String               @unique
-    conversations        Conversation[]
+    id       String  @id @unique
+    name     String?
+    email    String  @unique
+    password String
+    // conversations        Conversation[]
     database_connections DatabaseConnection[]
     created_at           DateTime             @default(now())
     updated_at           DateTime             @default(now())
 }
 
-model Conversation {
-    id         String   @id @unique
-    prompts    Prompt[]
-    user       User     @relation(fields: [user_id], references: [id])
-    user_id    String
-    created_at DateTime @default(now())
-    updated_at DateTime @default(now())
-}
+// model Conversation {
+//     id         String   @id @unique
+//     prompts    Prompt[]
+//     user       User     @relation(fields: [user_id], references: [id])
+//     user_id    String
+//     created_at DateTime @default(now())
+//     updated_at DateTime @default(now())
+// }
 
 model Prompt {
     id              String       @id @unique
     query           String
     response        String
-    conversation    Conversation @relation(fields: [conversation_id], references: [id])
-    conversation_id String
+    // conversation    Conversation @relation(fields: [conversation_id], references: [id])
+    // conversation_id String
     created_at      DateTime     @default(now())
     updated_at      DateTime     @default(now())
 }
 
 model DatabaseConnection {
     id            String   @id @unique
-    type          String
-    uri           String
+    // type          String
+    connection_uri           String
     database_name String?
     user_id       String
     user          User     @relation(fields: [user_id], references: [id])
