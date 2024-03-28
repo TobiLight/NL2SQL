@@ -42,6 +42,20 @@ async def create_db(database_data: CreateDatabase,
     existing_db = await db.databaseconnection.\
         find_first(where={"connection_uri": database_data.connection_uri})
 
+    try:
+        current_user = await db.user.find_first(where={"id": str(user.id)})
+    except (errors.PrismaError,) as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="An error has occured!")
+
+    # current_user = await db.user.find_unique({"id": str(user.id)}) if await db.user.find_unique({"id": str(user.id)}) else None
+
+    # if not current_user or current_user is None:
+    #     raise HTTPException(
+    #         status_code=status.HTTP_400_BAD_REQUEST,
+    #         detail="An error has occured!")
+
     if existing_db is not None:
         return responses.\
             JSONResponse(content={"status":
@@ -50,6 +64,7 @@ async def create_db(database_data: CreateDatabase,
 
     new_db = await db.databaseconnection.create({
         "id": str(uuid4()),
+        "type": "PostgreSQL",
         "connection_uri": database_data.connection_uri,
         'user_id': database_data.user_id,
         "created_at": datetime.now(),

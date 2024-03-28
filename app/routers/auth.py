@@ -49,7 +49,7 @@ async def login(form_data: AuthForm):
             status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid login!",
             headers={"WWW-Authenticate": "Bearer"})
 
-    access_token_expires = timedelta(minutes=60)
+    access_token_expires = timedelta(minutes=60*12)
 
     token = create_access_token(
         data={"sub": user.email}, expires_delta=access_token_expires)
@@ -89,8 +89,8 @@ async def create_user(form_data: AuthForm):
         "name": name,
         "email": email,
         "password": hashed_password,
-        "created_at": datetime.now(),
-        "updated-at": datetime.now()
+        # "created_at": datetime.now(),
+        # "updated_at": datetime.now()
     })
 
     await db.user.create(data=new_user)
