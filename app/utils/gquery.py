@@ -54,8 +54,8 @@ def generate_sql(query_text: str, table_meta: Dict[str, str], schema: str, db_ty
                 
                 Do not wrap the SQL command in ```sql ...``` or code blocks or quotes.
                 
-                In the SQL Query, wrap the key from database tables {1} with '"'. For example: User -> "User"                      
-            """.format(history_str, query_text, schema, table_meta))
+                In the SQL Query for {4} is "MySQL", DO NOT wrap the table name(s) in quotes. For example: "users" should be users, otherwise do so for if {4} is "PostgreSQL"                      
+            """.format(history_str, query_text, schema, table_meta, db_type))
             return response
 
         response = chat.send_message(
@@ -67,15 +67,14 @@ def generate_sql(query_text: str, table_meta: Dict[str, str], schema: str, db_ty
             ============================================================
             {0}
             
+            The database schema is {2} and the database tables are: {3}. 
             
             What would be the SQL query command to this question based on the history provided above: {1} 
             
-            The database schema is {2} and the database tables are: {3}. 
-            
             Do not wrap the SQL command in ```sql ...``` or code blocks or quotes.
             
-            In the SQL Query, wrap the key from database tables {1} with '"'. For example: User -> "User"                      
-            """.format(history_str, query_text, schema, table_meta)
+            In the SQL Query for {4} is "MySQL", DO NOT wrap the table name(s) in quotes. For example: "users" should be users, otherwise do so for if {4} is "PostgreSQL"                 
+            """.format(history_str, query_text, schema, table_meta, db_type)
         )
 
         return response
@@ -86,17 +85,17 @@ def generate_sql(query_text: str, table_meta: Dict[str, str], schema: str, db_ty
         
         You are using {3} as the database and SQLAlchemy (a python package) as the ORM for operations on the database.
         
-        You MUST answer only with a 100% correct SQL query command to execute. Don't include any explanation.
+        You MUST answer only with a 100% correct {3} query command to execute. Don't include any explanation.
         
         The database schema is {2} and the database tables are: {1}. 
         
         The table is a hashmap of table name as keys and the schemas as values.
-        
+                
         What would be the SQL query command to this question: {4}
         
-        Do not wrap the SQL command in ```sql ...``` or code blocks or quotes.
+        In the SQL Query for {3}, wrap the key from database tables {1} with '"'. For example: User -> "User". If {3} is "MySQL", DO NOT wrap the table name(s) in quotes. For example: "users" should be users.
         
-        In the SQL Query, wrap the key from database tables {1} with '"'. For example: User -> "User"
+        DO NOT wrap the SQL command in ```sql ...``` or code blocks or quotes.
         """.format(
             datetime.now().date(), table_meta, schema, db_type, query_text)
     )

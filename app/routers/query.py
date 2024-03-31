@@ -3,17 +3,15 @@
 # Author: Oluwatobiloba Light
 """Query route"""
 
-from MySQLdb import DatabaseError, OperationalError
+from MySQLdb import DatabaseError, OperationalError, ProgrammingError
 from fastapi import APIRouter, Depends, HTTPException, responses, status
 from fastapi.encoders import jsonable_encoder
-
 from app.utils.auth import custom_auth
 from app.utils.gquery import generate_sql, get_applicable_tables_sql, query_response_to_nl
 from schema.query import QueryPrompt
 from schema.user import User
 from app.db import db
 from app.gemini import model, chat
-from datetime import datetime
 from uuid import uuid4
 
 
@@ -74,6 +72,7 @@ async def create_prompt(query: QueryPrompt, user: User = Depends(custom_auth)):
         if conversation:
             conversation_id = conversation.id
         else:
+            print("creating a new one")
             conversation = await db.conversation.create(data={
                 "id": str(uuid4()),
                 "user_id": str(user.id),
@@ -90,6 +89,16 @@ async def create_prompt(query: QueryPrompt, user: User = Depends(custom_auth)):
         metadata = MetaData()
         metadata.reflect(bind=engine)
         session = sessionmaker(bind=engine)()
+
+        if "show tables" in query.query.lower():
+            sql_result = session.execute(text(
+                "SHOW TABLES;")).all()
+            db_name = engine.url.database
+
+            response = query_response_to_nl(
+                "I want the list of table names of this database: {}".format(db_name), sql_result).text
+
+            return responses.JSONResponse(content={"response": response})
 
         # get db_tables from database
         db_tables = list(metadata.tables.keys())
@@ -172,7 +181,74 @@ async def create_prompt(query: QueryPrompt, user: User = Depends(custom_auth)):
                         status_code=status.HTTP_400_BAD_REQUEST,
                         detail="An error has occured while querying the database! Please try again :)")
             else:
-                return "{} query Coming soon!".format(db_type)
+                # get table name and the table from database tables
+                for table_name, table in metadata.tables.items():
+                    # Extract column names
+                    column_names = [
+                        column.name for column in table.columns]
+
+                    # Store in the dictionary
+                    data[table_name] = column_names
+
+                sql_command: str = ""
+
+                if conversation and conversation.prompts is not None:
+                    prompts_data = []
+                    prompts_data_obj = {}
+                    for l in range(len(conversation.prompts)):
+                        prompts_data_obj["query"] = conversation.prompts[l].query
+                        prompts_data_obj["response"] = conversation.prompts[l].response
+                        prompts_data.append(prompts_data_obj)
+
+                    sql_command = generate_sql(
+                        query.query, data, "'public'", "MySQL", history=prompts_data).text
+                    print("has history")
+                else:
+                    sql_command = generate_sql(
+                        query.query, data, "'public'", "MySQL").text
+
+                # sanitize the query
+                if ("```sql" in str(sql_command)[:6]):
+                    print("yes, ```sql")
+                    sql_command = str(sql_command)[6:]
+
+                if "```" in str(sql_command)[:3]:
+                    print("yes, ```")
+                    sql_command = str(sql_command)[3:]
+
+                if "```" in str(sql_command)[-3:]:
+                    print("yes, ``` back")
+                    sql_command = str(sql_command)[:-3]
+
+                sql_query = text(sql_command)
+
+                print("cleaned_sql", sql_query)
+
+                try:
+                    sql_result = session.execute(
+                        text(str(sql_query))).all()
+
+                    response = query_response_to_nl(
+                        query.query, sql_result).text
+
+                    # save the response to prompts
+                    await db.prompt.create({
+                        "id": str(uuid4()),
+                        "conversation_id": conversation.id,
+                        "query": query.query,
+                        "response": response,
+                    })
+
+                    conversation = await db.conversation.find_first(where={"id": conversation_id}, include={"prompts": True})
+
+                    # return conversation: includes user query and response
+                    return responses.JSONResponse(content={"response": jsonable_encoder(conversation)})
+                except (ProgrammingError, ) as e:
+                    # print("error", e)
+                    # print(session.execute(text(str(sql_query))).all())
+                    raise HTTPException(
+                        status_code=status.HTTP_400_BAD_REQUEST,
+                        detail="An error has occured while querying the database! Please try again :)")
 
     except (DatabaseError, OperationalError) as e:
         raise HTTPException(
