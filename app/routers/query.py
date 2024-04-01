@@ -3,16 +3,13 @@
 # Author: Oluwatobiloba Light
 """Query route"""
 
-from MySQLdb import DatabaseError, OperationalError, ProgrammingError
+from MySQLdb import DatabaseError, OperationalError
 from fastapi import APIRouter, Depends, HTTPException, responses, status
-from fastapi.encoders import jsonable_encoder
 from app.utils.auth import custom_auth
-from app.utils.gquery import generate_sql, query_response_to_nl
+from app.utils.gquery import query_response_to_nl
 from app.utils.utils import conversation_exists_or_create, db_exists, run_query
 from schema.query import QueryPrompt
 from schema.user import User
-from app.db import db
-from uuid import uuid4
 
 
 query_router = APIRouter(
