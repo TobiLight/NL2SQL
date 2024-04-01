@@ -9,7 +9,8 @@ from fastapi.encoders import jsonable_encoder
 from app.db import db
 from prisma import errors
 from app.utils.auth import custom_auth
-from schema.database import CreateDatabase, Database
+from app.utils.utils import db_exists
+from schema.database import CreateDatabase, Database, GetDatabase
 from schema.user import User
 from datetime import datetime
 
@@ -21,7 +22,7 @@ database_router = APIRouter(
 
 
 @database_router.get("/all", summary="List of User's Databases")
-async def all_db(user: User = Depends(custom_auth)):
+async def all_db_conn(user: User = Depends(custom_auth)):
     """
     GET /database/all endpoint to retrieve a list of databases associated with
     the authenticated user.
@@ -31,8 +32,9 @@ async def all_db(user: User = Depends(custom_auth)):
         of the custom authentication dependency.
 
     Returns:
-        - List[dict]: A list of dictionaries containing information about each
-        database associated with the user.
+        - responses.JSONResponse: A JSON response containing a list of
+        dictionaries with information about each database associated with
+        the user.
 
     Raises:
         - HTTPException: If there is an error retrieving the list of databases
@@ -55,8 +57,8 @@ async def all_db(user: User = Depends(custom_auth)):
 
 
 @database_router.post("/create", summary="Create Database")
-async def create_db(database_data: CreateDatabase,
-                    user: User = Depends(custom_auth)):
+async def create_db_conn(database_data: CreateDatabase,
+                         user: User = Depends(custom_auth)):
     """
     POST /database/create endpoint to create a new database associated with the
     authenticated user.
@@ -68,7 +70,8 @@ async def create_db(database_data: CreateDatabase,
         of the custom authentication dependency.
 
     Returns:
-        - dict: A dictionary containing information about the created database.
+        - responses.JSONResponse: A JSON response containing information about
+        the created database.
 
     Raises:
         - HTTPException: If there is an error creating the database or if the
@@ -107,3 +110,31 @@ async def create_db(database_data: CreateDatabase,
 
     return responses.JSONResponse(content={"database": db_json},
                                   status_code=status.HTTP_200_OK)
+
+
+@database_router.get("", summary="Get a database connection")
+async def get_db_conn(database: GetDatabase, user: User = Depends(custom_auth)):
+    """
+    Retrieve a database connection associated with the specified database ID.
+
+    Args:
+        - database (GetDatabase): The database object containing the ID of the
+        database to retrieve.
+        - user (User, optional): The authenticated user. Defaults to the result
+        of the custom authentication dependency.
+
+    Returns:
+        - responses.JSONResponse: A JSON response containing information about
+        the requested database connection.
+
+    Raises:
+        - HTTPException: If the specified database does not exist or if the
+        user is not authenticated.
+
+    Summary:
+        This endpoint retrieves a database connection associated with the
+        specified database ID.
+    """
+    db = await db_exists(database.id)
+
+    return responses.JSONResponse(content=jsonable_encoder(db))

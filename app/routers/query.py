@@ -29,7 +29,8 @@ async def create_prompt(query: QueryPrompt, user: User = Depends(custom_auth)):
         of the custom authentication dependency.
 
     Returns:
-        dict: A dictionary containing information about the created prompt.
+        - responses.JSONResponse: A dict as JSON response containing
+        information about the created prompt.
 
     Raises:
         HTTPException: If there is an error creating the prompt or if the user
