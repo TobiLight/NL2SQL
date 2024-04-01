@@ -17,16 +17,16 @@ Writing complex SQL queries can be challenging, especially for non-technical use
 - Handles complex queries, supports aggregation functions
 
 
-### Challenges
-- Limited training data availability
-- Handling complex natural language queries
-- Ensuring accuracy and efficiency of the NLP model
-
-
 ### Technical Approach
 - **Natural Language Processing (NLP)**: Google Gemini is utilized for its advanced NLP capabilities to understand the intent and meaning behind user queries expressed in natural language.
 - **Data Acquisition & Preprocessing**: A curated dataset of natural language queries paired with corresponding SQL translations is used to train and refine the agent.
 - **SQL Generation**: The agent translates the user's natural language query into a well-structured and functional SQL statement suitable for data retrieval.
+
+
+### Challenges
+- Limited training data availability
+- Handling complex natural language queries
+- Ensuring accuracy and efficiency of the NLP model
 
 
 ### Project installation & Startup
