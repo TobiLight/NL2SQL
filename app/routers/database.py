@@ -22,7 +22,26 @@ database_router = APIRouter(
 
 @database_router.get("/all", summary="List of User's Databases")
 async def all_db(user: User = Depends(custom_auth)):
-    """"""
+    """
+    GET /database/all endpoint to retrieve a list of databases associated with
+    the authenticated user.
+
+    Args:
+        - user (User, optional): The authenticated user. Defaults to the result
+        of the custom authentication dependency.
+
+    Returns:
+        - List[dict]: A list of dictionaries containing information about each
+        database associated with the user.
+
+    Raises:
+        - HTTPException: If there is an error retrieving the list of databases
+        or if the user is not authenticated.
+
+    Summary:
+        This endpoint retrieves a list of databases that belong to the
+        authenticated user.
+    """
     try:
         list_db = await db.databaseconnection.find_many(where={"user_id":
                                                                str(user.id)})
@@ -38,7 +57,27 @@ async def all_db(user: User = Depends(custom_auth)):
 @database_router.post("/create", summary="Create Database")
 async def create_db(database_data: CreateDatabase,
                     user: User = Depends(custom_auth)):
-    """"""
+    """
+    POST /database/create endpoint to create a new database associated with the
+    authenticated user.
+
+    Args:
+        - database_data (CreateDatabase): The data required to create the
+        new database.
+        - user (User, optional): The authenticated user. Defaults to the result
+        of the custom authentication dependency.
+
+    Returns:
+        - dict: A dictionary containing information about the created database.
+
+    Raises:
+        - HTTPException: If there is an error creating the database or if the
+        user is not authenticated.
+
+    Summary:
+        This endpoint creates a new database associated with the authenticated
+        user.
+    """
     existing_db = await db.databaseconnection.\
         find_first(where={"connection_uri": database_data.connection_uri})
 
