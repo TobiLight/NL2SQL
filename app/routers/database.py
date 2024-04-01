@@ -27,10 +27,10 @@ async def all_db(user: User = Depends(custom_auth)):
         list_db = await db.databaseconnection.find_many(where={"user_id":
                                                                str(user.id)})
 
-        return responses.JSONResponse(content={"databases": list_db},
-                                      status_code=status.HTTP_200_OK)
+        return responses.JSONResponse(
+            content={"databases": jsonable_encoder(list_db)},
+            status_code=status.HTTP_200_OK)
     except errors.PrismaError as e:
-        print("Database Error:", e)
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
                             detail="An error has occured!")
 
@@ -42,19 +42,7 @@ async def create_db(database_data: CreateDatabase,
     existing_db = await db.databaseconnection.\
         find_first(where={"connection_uri": database_data.connection_uri})
 
-    try:
-        current_user = await db.user.find_first(where={"id": str(user.id)})
-    except (errors.PrismaError,) as e:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="An error has occured!")
-
-    # current_user = await db.user.find_unique({"id": str(user.id)}) if await db.user.find_unique({"id": str(user.id)}) else None
-
-    # if not current_user or current_user is None:
-    #     raise HTTPException(
-    #         status_code=status.HTTP_400_BAD_REQUEST,
-    #         detail="An error has occured!")
+    print(user)
 
     if existing_db is not None:
         return responses.\
@@ -64,9 +52,9 @@ async def create_db(database_data: CreateDatabase,
 
     new_db = await db.databaseconnection.create({
         "id": str(uuid4()),
-        "type": "PostgreSQL",
+        "type": database_data.database_type.lower(),
         "connection_uri": database_data.connection_uri,
-        'user_id': database_data.user_id,
+        'user_id': str(user.id),
         "created_at": datetime.now(),
         "updated_at": datetime.now()
     })
@@ -77,5 +65,6 @@ async def create_db(database_data: CreateDatabase,
                                         user_id=str(user.id),
                                         created_at=new_db.created_at,
                                         updated_at=new_db.updated_at))
+
     return responses.JSONResponse(content={"database": db_json},
                                   status_code=status.HTTP_200_OK)

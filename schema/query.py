@@ -13,7 +13,6 @@ from pydantic import BaseModel, Field
 class QueryPrompt(BaseModel):
     query: str
     database_id: Union[str, UUID]
-    database_type: Union[str, None] = Field(default=None)
     conversation_id: Union[str, None] = Field(default=None)
 
 

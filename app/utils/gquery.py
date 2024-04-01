@@ -39,7 +39,6 @@ def generate_sql(query_text: str, table_meta: Dict[str, str], schema: str, db_ty
                 history[hist]["response"])
             counter += 1
 
-        print(history_str)
         if counter >= 2:
             response = chat.send_message(
                 """
@@ -48,13 +47,15 @@ def generate_sql(query_text: str, table_meta: Dict[str, str], schema: str, db_ty
                 {0}
             
             
-                What would be the SQL query command to this question based on the history provided above: {1}.
-                
                 The database schema is {2} and the database tables are: {3}. 
+                
+                What would be the SQL query command to this question based on the history provided above: {1}.
                 
                 Do not wrap the SQL command in ```sql ...``` or code blocks or quotes.
                 
-                In the SQL Query for {4} is "MySQL", DO NOT wrap the table name(s) in quotes. For example: "users" should be users, otherwise do so for if {4} is "PostgreSQL"                      
+                If {4} is "MySQL", DO NOT wrap the table name(s) in quotes. For example: "users" should be users. 
+                
+                If {4} is "PostgreSQL", you MUST wrap the table name(s) in quotes. For example: Users should be "Users".
             """.format(history_str, query_text, schema, table_meta, db_type))
             return response
 
@@ -73,7 +74,9 @@ def generate_sql(query_text: str, table_meta: Dict[str, str], schema: str, db_ty
             
             Do not wrap the SQL command in ```sql ...``` or code blocks or quotes.
             
-            In the SQL Query for {4} is "MySQL", DO NOT wrap the table name(s) in quotes. For example: "users" should be users, otherwise do so for if {4} is "PostgreSQL"                 
+            If {4} is "MySQL", DO NOT wrap the table name(s) in quotes. For example: "users" should be users. 
+            
+            If {4} is "PostgreSQL", you MUST wrap the table name(s) in quotes. For example: Users should be "Users".
             """.format(history_str, query_text, schema, table_meta, db_type)
         )
 
@@ -93,9 +96,9 @@ def generate_sql(query_text: str, table_meta: Dict[str, str], schema: str, db_ty
                 
         What would be the SQL query command to this question: {4}
         
-        In the SQL Query for {3}, wrap the key from database tables {1} with '"'. For example: User -> "User". If {3} is "MySQL", DO NOT wrap the table name(s) in quotes. For example: "users" should be users.
-        
         DO NOT wrap the SQL command in ```sql ...``` or code blocks or quotes.
+        
+        If the SQL Query for {3}, wrap the key from database tables {1} with '"'. For example: User -> "User". If {3}, DO NOT wrap the table name(s) in quotes. For example: "users" should be users.
         """.format(
             datetime.now().date(), table_meta, schema, db_type, query_text)
     )
