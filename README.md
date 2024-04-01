@@ -11,6 +11,12 @@ Writing complex SQL queries can be challenging, especially for non-technical use
 - **Reduce Errors**: Eliminate errors associated with manual SQL coding.
 
 
+### Features
+- Translate natural language questions to valid SQL statements.
+- Currently supports ONLY English language input.
+- Handles complex queries, supports aggregation functions
+
+
 ### Challenges
 - Limited training data availability
 - Handling complex natural language queries
@@ -35,13 +41,6 @@ Writing complex SQL queries can be challenging, especially for non-technical use
 	- JWT_ACCESS_TOKEN_EXPIRE_MINUTES
 	- GOOGLE_API_KEY
 5. To start the application, run ```python3 -m app.main```
-
-
-
-### Features
-- Translate natural language questions to valid SQL statements.
-- Currently supports ONLY English language input.
-- Handles complex queries, supports aggregation functions
 
 
 ### Technologies Used
