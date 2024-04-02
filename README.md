@@ -27,6 +27,7 @@ Writing complex SQL queries can be challenging, especially for non-technical use
 - Limited training data availability
 - Handling complex natural language queries
 - Ensuring accuracy and efficiency of the NLP model
+- Error handling
 
 
 ### Project installation & Startup
