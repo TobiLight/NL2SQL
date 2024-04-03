@@ -9,7 +9,6 @@ from fastapi.encoders import jsonable_encoder
 from app.db import db
 from prisma import errors
 from app.utils.auth import custom_auth
-from app.utils.utils import db_exists
 from schema.database import CreateDatabase, Database, GetDatabase
 from schema.user import User
 from datetime import datetime
@@ -82,15 +81,16 @@ async def create_db_conn(database_data: CreateDatabase,
         user.
     """
     existing_db = await db.databaseconnection.\
-        find_first(where={"connection_uri": database_data.connection_uri})
+        find_first(where={
+            "connection_uri": database_data.connection_uri.lower(),
+            # "database_name": database_data.database_name.lower(),
+            "user_id": str(user.id)})
 
-    print(user)
-
-    if existing_db is not None:
+    if existing_db:
         return responses.\
             JSONResponse(content={"status":
                                   "Database connection exists already!"},
-                         status_code=status.HTTP_200_OK)
+                         status_code=status.HTTP_400_BAD_REQUEST)
 
     new_db = await db.databaseconnection.create({
         "id": str(uuid4()),
@@ -112,8 +112,8 @@ async def create_db_conn(database_data: CreateDatabase,
                                   status_code=status.HTTP_200_OK)
 
 
-@database_router.get("", summary="Get a database connection")
-async def get_db_conn(database: GetDatabase, user: User = Depends(custom_auth)):
+@database_router.get("/{database_id}", summary="Get a database connection")
+async def get_db_conn(database_id: str, user: User = Depends(custom_auth)):
     """
     Retrieve a database connection associated with the specified database ID.
 
@@ -135,6 +135,15 @@ async def get_db_conn(database: GetDatabase, user: User = Depends(custom_auth)):
         This endpoint retrieves a database connection associated with the
         specified database ID.
     """
-    db = await db_exists(database.id)
+    database = await db.databaseconnection.find_first(
+        where={"id": database_id, "user_id": str(user.id)}
+    )
 
-    return responses.JSONResponse(content=jsonable_encoder(db))
+    if not database or database is None:
+        return responses.JSONResponse(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            content="Database does not exist!"
+        )
+
+    return responses.JSONResponse(
+        content=jsonable_encoder(database), status_code=status.HTTP_200_OK)

@@ -5,6 +5,8 @@
 """N2SQL App entry point"""
 
 from fastapi import FastAPI
+from fastapi.exceptions import RequestValidationError
+from fastapi.responses import JSONResponse
 import uvicorn
 from app.db import db
 from fastapi.middleware.cors import CORSMiddleware
@@ -51,6 +53,21 @@ def init_app():
 
 
 app = init_app()
+
+
+@app.exception_handler(RequestValidationError)
+async def validation_exception_handler(_, exc):
+    errors = []
+    for error in exc.errors():
+        field = ''.join(error['loc'][1]) if len(
+            error['loc']) > 1 else error['loc'][0]
+        errors.append({
+            'field': field,
+            'message': error['msg']
+        })
+    return JSONResponse(status_code=422, content={
+        "detail": "Validation error", "errors": errors})
+
 
 if __name__ == "__main__":
     uvicorn.run('app.main:app',

@@ -28,6 +28,21 @@ auth_router = APIRouter(
 )
 
 
+# @auth_router.exception_handler(RequestValidationError)
+# async def validation_exception_handler(_, exc):
+#     errors = []
+#     for error in exc.errors():
+#         print(error)
+#         field = '.'.join(error['loc']) if len(
+#             error['loc']) > 1 else error['loc'][0]
+#         errors.append({
+#             'field': field,
+#             'message': error['msg']
+#         })
+#     return JSONResponse(status_code=422, content={"detail": "Validation error", "errors": errors})
+
+
+
 @auth_router.post("/login", summary="User login",
                   response_model_exclude_none=True)
 async def login(form_data: AuthForm):

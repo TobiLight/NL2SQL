@@ -44,7 +44,7 @@ async def create_prompt(query: QueryPrompt, user: User = Depends(custom_auth)):
         return responses.JSONResponse(content="Query cannot be empty!",
                                       status_code=status.HTTP_400_BAD_REQUEST)
 
-    existing_db = await db_exists(str(query.database_id))
+    existing_db = await db_exists(str(query.database_id), str(user.id))
 
     [_, conversation] = await conversation_exists_or_create(
         query.conversation_id, str(user.id))
@@ -69,7 +69,9 @@ async def create_prompt(query: QueryPrompt, user: User = Depends(custom_auth)):
                     "I want the list of table names of this database: {}"
                     .format(db_name), sql_result).text
 
-                return responses.JSONResponse(content={"response": response})
+                return responses.JSONResponse(
+                    content={"response": response,
+                             "conversation_id": conversation.id})
 
             sql_result = session.execute(text(
                 "SHOW TABLES;")).all()
@@ -78,7 +80,9 @@ async def create_prompt(query: QueryPrompt, user: User = Depends(custom_auth)):
                 "I want the list of table names of this database: {}"
                 .format(db_name), sql_result).text
 
-            return responses.JSONResponse(content={"response": response})
+            return responses.JSONResponse(
+                content={"response": response,
+                         "conversation_id": conversation.id})
 
         # check database type
         if existing_db.type is not None:
