@@ -64,15 +64,16 @@ def is_email(email):
     return True
 
 
-async def db_exists(db_id: str):
+async def db_exists(db_id: str, user_id: str):
     """"""
     existing_db = await db.databaseconnection\
-        .find_unique(where={"id": db_id})
+        .find_first(where={"id": db_id, "user_id": user_id})
 
     if existing_db is None or not existing_db:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Database does not exist! Consider adding a new database!",
+            detail="""Database does not exist for this user!
+            Consider adding a new database!""",
             headers={"Authorization": "Bearer"})
 
     return existing_db
@@ -148,12 +149,12 @@ async def run_query(db_type: str, conversation: Conversation, query: str,
             query, data, "'public'", "PostgreSQL"
             if db_type.lower() == 'PostgreSQL'.lower() else "MySQL").text
 
-    print("unsanitized sql", sql_command)
+    # print("unsanitized sql", sql_command)
     sanitize_sql_query(str(sql_command))
 
     sql_query = text(sql_command)
 
-    print("cleaned_sql", sql_query)
+    # print("cleaned_sql", sql_query)
 
     try:
         sql_result = session.execute(text(str(sql_query))).all()

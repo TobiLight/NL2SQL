@@ -21,5 +21,8 @@ def home():
 def health_check():
     """GET /health-check endpoint to check server health"""
     users = []
-    return responses.JSONResponse(content={"status": "OK", "message": "Welcome to NL2SQL! 🎉", "users": users},
-                                  status_code=status.HTTP_200_OK)
+    return responses.JSONResponse(content={
+        "status": "OK", "message":
+        "Welcome to NL2SQL! 🎉",
+        "users": users
+    }, status_code=status.HTTP_200_OK)

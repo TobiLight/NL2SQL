@@ -3,15 +3,13 @@
 # Author: Oluwatobiloba Light
 """Prompt schema"""
 
-from dataclasses import dataclass
-from typing import Union
-from typing_extensions import Annotated
-from fastapi import Form
+
 from pydantic import BaseModel, Field
 from datetime import datetime
 
 
 class Prompt(BaseModel):
+    """Prompt Schema"""
     id: str = Field(...)
     query: str
     response: str

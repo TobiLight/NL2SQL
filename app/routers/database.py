@@ -9,7 +9,7 @@ from fastapi.encoders import jsonable_encoder
 from app.db import db
 from prisma import errors
 from app.utils.auth import custom_auth
-from schema.database import CreateDatabase, Database
+from schema.database import CreateDatabase, Database, GetDatabase
 from schema.user import User
 from datetime import datetime
 
@@ -21,7 +21,7 @@ database_router = APIRouter(
 
 
 @database_router.get("/all", summary="List of User's Databases")
-async def all_db(user: User = Depends(custom_auth)):
+async def all_db_conn(user: User = Depends(custom_auth)):
     """
     GET /database/all endpoint to retrieve a list of databases associated with
     the authenticated user.
@@ -31,8 +31,9 @@ async def all_db(user: User = Depends(custom_auth)):
         of the custom authentication dependency.
 
     Returns:
-        - List[dict]: A list of dictionaries containing information about each
-        database associated with the user.
+        - responses.JSONResponse: A JSON response containing a list of
+        dictionaries with information about each database associated with
+        the user.
 
     Raises:
         - HTTPException: If there is an error retrieving the list of databases
@@ -55,8 +56,8 @@ async def all_db(user: User = Depends(custom_auth)):
 
 
 @database_router.post("/create", summary="Create Database")
-async def create_db(database_data: CreateDatabase,
-                    user: User = Depends(custom_auth)):
+async def create_db_conn(database_data: CreateDatabase,
+                         user: User = Depends(custom_auth)):
     """
     POST /database/create endpoint to create a new database associated with the
     authenticated user.
@@ -68,7 +69,8 @@ async def create_db(database_data: CreateDatabase,
         of the custom authentication dependency.
 
     Returns:
-        - dict: A dictionary containing information about the created database.
+        - responses.JSONResponse: A JSON response containing information about
+        the created database.
 
     Raises:
         - HTTPException: If there is an error creating the database or if the
@@ -79,15 +81,16 @@ async def create_db(database_data: CreateDatabase,
         user.
     """
     existing_db = await db.databaseconnection.\
-        find_first(where={"connection_uri": database_data.connection_uri})
+        find_first(where={
+            "connection_uri": database_data.connection_uri.lower(),
+            # "database_name": database_data.database_name.lower(),
+            "user_id": str(user.id)})
 
-    print(user)
-
-    if existing_db is not None:
+    if existing_db:
         return responses.\
             JSONResponse(content={"status":
                                   "Database connection exists already!"},
-                         status_code=status.HTTP_200_OK)
+                         status_code=status.HTTP_400_BAD_REQUEST)
 
     new_db = await db.databaseconnection.create({
         "id": str(uuid4()),
@@ -107,3 +110,40 @@ async def create_db(database_data: CreateDatabase,
 
     return responses.JSONResponse(content={"database": db_json},
                                   status_code=status.HTTP_200_OK)
+
+
+@database_router.get("/{database_id}", summary="Get a database connection")
+async def get_db_conn(database_id: str, user: User = Depends(custom_auth)):
+    """
+    Retrieve a database connection associated with the specified database ID.
+
+    Args:
+        - database (GetDatabase): The database object containing the ID of the
+        database to retrieve.
+        - user (User, optional): The authenticated user. Defaults to the result
+        of the custom authentication dependency.
+
+    Returns:
+        - responses.JSONResponse: A JSON response containing information about
+        the requested database connection.
+
+    Raises:
+        - HTTPException: If the specified database does not exist or if the
+        user is not authenticated.
+
+    Summary:
+        This endpoint retrieves a database connection associated with the
+        specified database ID.
+    """
+    database = await db.databaseconnection.find_first(
+        where={"id": database_id, "user_id": str(user.id)}
+    )
+
+    if not database or database is None:
+        return responses.JSONResponse(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            content="Database does not exist!"
+        )
+
+    return responses.JSONResponse(
+        content=jsonable_encoder(database), status_code=status.HTTP_200_OK)
